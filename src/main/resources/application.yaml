@@ -28,6 +28,47 @@ server:
   # service when all run on the same machine.
   port: ${SERVER_PORT:8088}
 
+internal-api:
+  # Same value in every service. Generate with: openssl rand -hex 32
+  token: ${INTERNAL_API_TOKEN:}
+
+device:
+  # The device service: its internal API answers which home a device is linked to, when it was
+  # linked and the devices of a home. Answers are reused for a while, and the last one is served
+  # while the service does not answer.
+  service:
+    url: ${DEVICE_SERVICE_URL:http://localhost:8084}
+    connect-timeout: 1s
+    read-timeout: 2s
+    ttl: 30s
+    stale-ttl: 1h
+
+home:
+  # The home service: its internal API answers whether a user is a member of a home, who may read
+  # its alerts, and the consumption limits of a home. Membership is never served stale.
+  service:
+    url: ${HOME_SERVICE_URL:http://localhost:8086}
+    connect-timeout: 1s
+    read-timeout: 2s
+    ttl: 30s
+    stale-ttl: 1h
+
+measurement:
+  # The measurement service: its internal API answers the consumption levels a reading is
+  # classified with and the energy of devices hour by hour. The levels are reused for a while,
+  # and the last ones are served while the service does not answer.
+  service:
+    url: ${MEASUREMENT_SERVICE_URL:http://localhost:8085}
+    connect-timeout: 1s
+    read-timeout: 5s
+    levels-ttl: 10m
+    levels-stale-ttl: 24h
+
+alert:
+  limit:
+    # Zone in which the day and the month of the consumption limit start.
+    zone: ${ALERT_LIMIT_ZONE:America/Bogota}
+
 management:
   endpoints:
     web:
