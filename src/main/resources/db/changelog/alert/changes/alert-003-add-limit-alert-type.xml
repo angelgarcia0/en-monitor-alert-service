@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        LIMIT alerts: the home's consumption of the day or the month reached the limit its owner
+        set in the thresholds. Home-scoped, without device, level nor measurement.
+    -->
+    <changeSet id="alert-003-add-limit-alert-type" author="JuanCortes2045">
+        <comment>alert.type accepts LIMIT.</comment>
+        <sql dbms="mysql">ALTER TABLE alert MODIFY type ENUM('THRESHOLD', 'CONNECTIVITY', 'DEVICE', 'LIMIT') NOT NULL</sql>
+
+        <rollback>
+            <sql dbms="mysql">DELETE FROM alert WHERE type = 'LIMIT'</sql>
+            <sql dbms="mysql">ALTER TABLE alert MODIFY type ENUM('THRESHOLD', 'CONNECTIVITY', 'DEVICE') NOT NULL</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

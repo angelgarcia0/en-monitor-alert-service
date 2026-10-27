@@ -11,4 +11,5 @@
             monolith already applied to the shared schema are recognised here as applied and
             never run twice.
         -->
+        <include file="alert/alert-changelog.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
