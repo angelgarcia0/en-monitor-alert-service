@@ -25,6 +25,16 @@ spring:
     # it (correlated: the return of an unrouted message is known before the confirmation completes).
     publisher-confirm-type: correlated
     publisher-returns: true
+    listener:
+      simple:
+        # A message that keeps failing is retried three times, one, two and four seconds apart,
+        # and then moved to the dead-letter queue of its queue instead of blocking the ones behind.
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2
 
   liquibase:
     # Only the alert changesets. The schema is shared with energy-monitor-backend and the
@@ -84,6 +94,19 @@ measurement:
     levels-stale-ttl: 24h
 
 messaging:
+  # Dead-letter exchange of the queues this service consumes.
+  dead-letter-exchange: alert-service.dlx
+  # Topic exchange the device service publishes to (device.linked, device.unlinked,
+  # device.connectivity-lost, device.connectivity-restored).
+  device-exchange: energy-monitor.device
+  # Topic exchange the measurement service publishes every stored reading to
+  # (measurement.recorded), which the alerts evaluate.
+  measurement-exchange: energy-monitor.measurement
+  consumers:
+    # Whether this service raises the alerts from the readings and the device events. Off until
+    # energy-monitor-backend stops raising them from its own queues: with both on every alert
+    # would be raised twice. The queues are declared either way, so nothing is lost meanwhile.
+    enabled: ${ALERT_CONSUMERS_ENABLED:false}
   # Topic exchange of the alerts this service announces (alert.raised), for the notification
   # service, which delivers them. Written to the alert_outbox table with the alert and relayed
   # every second, up to 50 messages, each confirmed by the broker within 5 s. Off only to hold the

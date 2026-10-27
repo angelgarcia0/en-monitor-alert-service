@@ -32,6 +32,10 @@ measurement:
     url: http://127.0.0.1:9
 
 messaging:
+  consumers:
+    # The consumers are exercised by calling them directly, and the suite must not leave their
+    # queues on a local broker.
+    declare-on-startup: false
   alert:
     # The suite raises alerts in the shared database, and their alert.raised rows must not reach a
     # broker that a running notification service consumes. Stored already discarded, a service
