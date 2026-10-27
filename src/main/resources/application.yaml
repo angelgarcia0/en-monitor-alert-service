@@ -16,6 +16,16 @@ spring:
         jdbc:
           time_zone: UTC
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:energy-monitor}
+    password: ${RABBITMQ_PASSWORD:}
+    # An alert message is marked as published only after the broker confirms it and a queue took
+    # it (correlated: the return of an unrouted message is known before the confirmation completes).
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
   liquibase:
     # Only the alert changesets. The schema is shared with energy-monitor-backend and the
     # security, device, measurement, home and notification services (ADR-003), and so is the
@@ -72,6 +82,18 @@ measurement:
     read-timeout: 5s
     levels-ttl: 10m
     levels-stale-ttl: 24h
+
+messaging:
+  # Topic exchange of the alerts this service announces (alert.raised), for the notification
+  # service, which delivers them. Written to the alert_outbox table with the alert and relayed
+  # every second, up to 50 messages, each confirmed by the broker within 5 s. Off only to hold the
+  # alerts back: they wait in the table meanwhile.
+  alert:
+    exchange: energy-monitor.alert
+    relay-enabled: ${ALERT_OUTBOX_RELAY_ENABLED:true}
+    poll-interval: PT1S
+    batch-size: 50
+    confirm-timeout: PT5S
 
 alert:
   limit:

@@ -30,3 +30,22 @@ device:
 measurement:
   service:
     url: http://127.0.0.1:9
+
+messaging:
+  alert:
+    # The suite raises alerts in the shared database, and their alert.raised rows must not reach a
+    # broker that a running notification service consumes. Stored already discarded, a service
+    # started later on the same database never publishes them either. The relay is covered by
+    # AlertOutboxRelayTest.
+    relay-enabled: false
+    discard-written: true
+
+spring.rabbitmq.listener.simple:
+  # A test context must not take messages from a queue a running service consumes.
+  auto-startup: false
+
+management:
+  health:
+    # No broker is required to run the suite.
+    rabbit:
+      enabled: false
