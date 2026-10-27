@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.energymonitor.alert.adapter.out.persistence.entity.AlertEntity;
 import com.energymonitor.alert.domain.model.Alert;
 import com.energymonitor.alert.domain.model.AlertStatus;
+import com.energymonitor.alert.infrastructure.JwtKeyedTest;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class AlertPersistenceTest {
+class AlertPersistenceTest extends JwtKeyedTest {
 
     private static final Instant T1 = Instant.parse("2026-01-15T08:00:00Z");
     private static final Instant T2 = Instant.parse("2026-01-15T09:00:00Z");
