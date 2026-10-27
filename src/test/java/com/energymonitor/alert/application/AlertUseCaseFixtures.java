@@ -1,13 +1,16 @@
 package com.energymonitor.alert.application;
 
+import com.energymonitor.alert.application.port.out.AlertEventPort;
 import com.energymonitor.alert.application.port.out.AlertPersistencePort;
 import com.energymonitor.alert.application.port.out.ConsumptionLevelLookupPort;
 import com.energymonitor.alert.application.port.out.HomeLookupPort;
 import com.energymonitor.alert.application.port.out.IdentifierGeneratorPort;
 import com.energymonitor.alert.domain.model.Alert;
+import com.energymonitor.alert.domain.model.AlertRaised;
 import com.energymonitor.alert.domain.model.AlertStatus;
 import com.energymonitor.alert.domain.model.RiskConsumption;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -133,6 +136,16 @@ public final class AlertUseCaseFixtures {
         public String generate() {
             sequence++;
             return "id" + String.format("%07d", sequence);
+        }
+    }
+
+    public static class FakeAlertEventPort implements AlertEventPort {
+
+        public final List<AlertRaised> published = new ArrayList<>();
+
+        @Override
+        public void publish(AlertRaised event) {
+            published.add(event);
         }
     }
 }
