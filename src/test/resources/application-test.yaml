@@ -35,6 +35,7 @@ messaging:
   consumers:
     # The consumers are exercised by calling them directly, and the suite must not leave their
     # queues on a local broker.
+    enabled: false
     declare-on-startup: false
   alert:
     # The suite raises alerts in the shared database, and their alert.raised rows must not reach a

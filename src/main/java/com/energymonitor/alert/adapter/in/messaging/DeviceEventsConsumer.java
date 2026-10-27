@@ -60,7 +60,7 @@ public class DeviceEventsConsumer {
     }
 
     @RabbitListener(queues = AlertConsumersMessagingConfiguration.DEVICE_EVENTS_QUEUE,
-            autoStartup = "${messaging.consumers.enabled:false}")
+            autoStartup = "${messaging.consumers.enabled:true}")
     public void on(Message message) {
         String type = typeOf(message);
         DeviceMessage body = json.readValue(message.getBody(), DeviceMessage.class);

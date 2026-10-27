@@ -103,10 +103,10 @@ messaging:
   # (measurement.recorded), which the alerts evaluate.
   measurement-exchange: energy-monitor.measurement
   consumers:
-    # Whether this service raises the alerts from the readings and the device events. Off until
-    # energy-monitor-backend stops raising them from its own queues: with both on every alert
-    # would be raised twice. The queues are declared either way, so nothing is lost meanwhile.
-    enabled: ${ALERT_CONSUMERS_ENABLED:false}
+    # Whether this service raises the alerts from the readings and the device events. On:
+    # energy-monitor-backend, which also raised them, is retired. Off only to hold the alerts; the
+    # queues are declared either way, so nothing is lost meanwhile.
+    enabled: ${ALERT_CONSUMERS_ENABLED:true}
   # Topic exchange of the alerts this service announces (alert.raised), for the notification
   # service, which delivers them. Written to the alert_outbox table with the alert and relayed
   # every second, up to 50 messages, each confirmed by the broker within 5 s. Off only to hold the

@@ -42,11 +42,10 @@ import tools.jackson.databind.ObjectMapper;
  * retry.
  *
  * <p>The queues are always declared, but their listeners start only with
- * {@code messaging.consumers.enabled}, off by default: while energy-monitor-backend still raises
- * the alerts from its own queues, both would raise them. Meanwhile the readings and the device
- * events pile up here. What piled up was already handled by the backend, so the queues are purged
- * right before the switch is turned on: an old reading replayed after its alert was resolved would
- * raise it again.
+ * {@code messaging.consumers.enabled}, on by default: energy-monitor-backend, which also raised the
+ * alerts, is retired. Turned off, the readings and the device events pile up here; purge the queues
+ * before turning it back on if the alerts were raised elsewhere meanwhile, since an old reading
+ * replayed after its alert was resolved would raise it again.
  */
 @Configuration(proxyBeanMethods = false)
 public class AlertConsumersMessagingConfiguration {

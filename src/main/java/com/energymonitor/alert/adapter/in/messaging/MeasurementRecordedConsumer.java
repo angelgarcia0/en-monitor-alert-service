@@ -55,7 +55,7 @@ public class MeasurementRecordedConsumer {
     }
 
     @RabbitListener(queues = AlertConsumersMessagingConfiguration.MEASUREMENT_RECORDED_QUEUE,
-            autoStartup = "${messaging.consumers.enabled:false}")
+            autoStartup = "${messaging.consumers.enabled:true}")
     public void on(Message message) {
         String type = typeOf(message);
         if (!MEASUREMENT_RECORDED.equals(type)) {
