@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Transactional outbox of the alert service.
+
+        Every alert.raised the notification service must receive is written here in the same
+        transaction as the alert it announces, and a relay publishes it to the message broker
+        afterwards. An alert is therefore never stored without its message, and a message is never
+        sent for an alert that rolled back.
+
+        Its own table rather than backend_outbox: that one belongs to energy-monitor-backend, which
+        still relays the recommendations through it.
+    -->
+    <changeSet id="alert-004-create-alert-outbox" author="angelgarcia0">
+        <comment>Creates the alert_outbox table of the transactional outbox.</comment>
+
+        <createTable tableName="alert_outbox">
+            <!-- Also the message id on the broker: consumers use it to drop duplicates. -->
+            <column name="id_message" type="VARCHAR(10)">
+                <constraints primaryKey="true" primaryKeyName="pk_alert_outbox" nullable="false"/>
+            </column>
+            <!-- Routing key on the broker, for example alert.raised. -->
+            <column name="message_type" type="VARCHAR(60)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occurred_at" type="DATETIME(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="published_at" type="DATETIME(6)"/>
+            <column name="discarded_at" type="DATETIME(6)"/>
+            <column name="attempts" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_error" type="VARCHAR(255)"/>
+        </createTable>
+
+        <!-- The relay reads the pending messages in order. -->
+        <createIndex tableName="alert_outbox" indexName="idx_alert_outbox_pending">
+            <column name="published_at"/>
+            <column name="discarded_at"/>
+            <column name="occurred_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="alert_outbox"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

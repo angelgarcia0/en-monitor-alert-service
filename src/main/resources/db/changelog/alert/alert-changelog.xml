@@ -13,5 +13,6 @@
     <include file="changes/alert-001-create-alert.xml" relativeToChangelogFile="true"/>
     <include file="changes/alert-002-add-device-alert-type.xml" relativeToChangelogFile="true"/>
     <include file="changes/alert-003-add-limit-alert-type.xml" relativeToChangelogFile="true"/>
+    <include file="changes/alert-004-create-alert-outbox.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
