@@ -1,0 +1,130 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: alert-service
+
+  profiles:
+    default: local
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:energy-monitor}
+    password: ${RABBITMQ_PASSWORD:}
+    # An alert message is marked as published only after the broker confirms it and a queue took
+    # it (correlated: the return of an unrouted message is known before the confirmation completes).
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        # A message that keeps failing is retried three times, one, two and four seconds apart,
+        # and then moved to the dead-letter queue of its queue instead of blocking the ones behind.
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2
+
+  liquibase:
+    # Only the alert changesets. The schema is shared with energy-monitor-backend and the
+    # security, device, measurement, home and notification services (ADR-003), and so is the
+    # DATABASECHANGELOG table: each service applies its own changelogs.
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+server:
+  # 8080 is the API gateway, 8082 the security service, 8083 energy-monitor-backend, 8084 the
+  # device service, 8085 the measurement service, 8086 the home service and 8087 the notification
+  # service when all run on the same machine.
+  port: ${SERVER_PORT:8088}
+
+security:
+  jwt:
+    # The access tokens are issued by the security service; this service only validates them, with
+    # the service's public key and its iss claim (the value the monolith used, kept unchanged).
+    issuer: https://energy-monitor-backend
+    public-key-path: ${SECURITY_JWT_PUBLIC_KEY_PATH:}
+
+# Calls from this service to the others: every one carries the shared token in X-Internal-Token,
+# and the called service checks it and the caller's network.
+internal-api:
+  # Same value in every service. Generate with: openssl rand -hex 32
+  token: ${INTERNAL_API_TOKEN:}
+
+device:
+  # The device service: its internal API answers which home a device is linked to, when it was
+  # linked and the devices of a home. Answers are reused for a while, and the last one is served
+  # while the service does not answer.
+  service:
+    url: ${DEVICE_SERVICE_URL:http://localhost:8084}
+    connect-timeout: 1s
+    read-timeout: 2s
+    ttl: 30s
+    stale-ttl: 1h
+
+home:
+  # The home service: its internal API answers whether a user is a member of a home, who may read
+  # its alerts, and the consumption limits of a home. Membership is never served stale.
+  service:
+    url: ${HOME_SERVICE_URL:http://localhost:8086}
+    connect-timeout: 1s
+    read-timeout: 2s
+    ttl: 30s
+    stale-ttl: 1h
+
+measurement:
+  # The measurement service: its internal API answers the consumption levels a reading is
+  # classified with and the energy of devices hour by hour. The levels are reused for a while,
+  # and the last ones are served while the service does not answer.
+  service:
+    url: ${MEASUREMENT_SERVICE_URL:http://localhost:8085}
+    connect-timeout: 1s
+    read-timeout: 5s
+    levels-ttl: 10m
+    levels-stale-ttl: 24h
+
+messaging:
+  # Dead-letter exchange of the queues this service consumes.
+  dead-letter-exchange: alert-service.dlx
+  # Topic exchange the device service publishes to (device.linked, device.unlinked,
+  # device.connectivity-lost, device.connectivity-restored).
+  device-exchange: energy-monitor.device
+  # Topic exchange the measurement service publishes every stored reading to
+  # (measurement.recorded), which the alerts evaluate.
+  measurement-exchange: energy-monitor.measurement
+  consumers:
+    # Whether this service raises the alerts from the readings and the device events. On:
+    # energy-monitor-backend, which also raised them, is retired. Off only to hold the alerts; the
+    # queues are declared either way, so nothing is lost meanwhile.
+    enabled: ${ALERT_CONSUMERS_ENABLED:true}
+  # Topic exchange of the alerts this service announces (alert.raised), for the notification
+  # service, which delivers them. Written to the alert_outbox table with the alert and relayed
+  # every second, up to 50 messages, each confirmed by the broker within 5 s. Off only to hold the
+  # alerts back: they wait in the table meanwhile.
+  alert:
+    exchange: energy-monitor.alert
+    relay-enabled: ${ALERT_OUTBOX_RELAY_ENABLED:true}
+    poll-interval: PT1S
+    batch-size: 50
+    confirm-timeout: PT5S
+
+alert:
+  limit:
+    # Zone in which the day and the month of the consumption limit start.
+    zone: ${ALERT_LIMIT_ZONE:America/Bogota}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

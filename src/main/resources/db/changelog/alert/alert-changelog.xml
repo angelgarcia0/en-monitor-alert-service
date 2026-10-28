@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Alerts module. Single table, no SQL foreign keys: every reference to
+        another bounded context is managed at application level.
+    -->
+
+    <include file="changes/alert-001-create-alert.xml" relativeToChangelogFile="true"/>
+    <include file="changes/alert-002-add-device-alert-type.xml" relativeToChangelogFile="true"/>
+    <include file="changes/alert-003-add-limit-alert-type.xml" relativeToChangelogFile="true"/>
+    <include file="changes/alert-004-create-alert-outbox.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

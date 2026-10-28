@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="alert-001-create-alert" author="JuanCortes2045">
+        <comment>Notification that something requires attention: an exceeded threshold or a device that stopped reporting. home_id, device_id, consumption_level_id and measurement_id reference other bounded contexts at application level only, no SQL foreign keys. A THRESHOLD alert carries consumption_level_id and measurement_id; a CONNECTIVITY alert carries neither. date_time is the business timestamp of the event, created_at is the audit timestamp.</comment>
+
+        <createTable tableName="alert">
+            <column name="id_alert" type="VARCHAR(10)">
+                <constraints primaryKey="true" primaryKeyName="pk_alert" nullable="false"/>
+            </column>
+            <column name="home_id" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="device_id" type="VARCHAR(10)"/>
+            <column name="type" type="ENUM('THRESHOLD', 'CONNECTIVITY')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message_key" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alert_status" type="ENUM('PENDING', 'RESOLVED')">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumption_level_id" type="VARCHAR(10)"/>
+            <column name="measurement_id" type="VARCHAR(10)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"
+                    defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <createIndex indexName="idx_alert_home_id" tableName="alert">
+            <column name="home_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_alert_home_id" tableName="alert"/>
+            <dropTable tableName="alert"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
