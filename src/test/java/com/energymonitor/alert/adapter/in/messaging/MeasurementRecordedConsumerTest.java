@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.energymonitor.alert.application.command.RegisterThresholdAlertCommand;
 import com.energymonitor.alert.application.port.in.RegisterDeviceLinkedAlert;
+import com.energymonitor.alert.application.port.in.RegisterAnomalyAlert;
 import com.energymonitor.alert.application.port.in.RegisterLimitAlert;
 import com.energymonitor.alert.application.port.in.RegisterThresholdAlert;
 import java.nio.charset.StandardCharsets;
@@ -31,9 +32,10 @@ class MeasurementRecordedConsumerTest {
 
     private final RegisterThresholdAlert threshold = mock(RegisterThresholdAlert.class);
     private final RegisterLimitAlert limit = mock(RegisterLimitAlert.class);
+    private final RegisterAnomalyAlert anomaly = mock(RegisterAnomalyAlert.class);
     private final RegisterDeviceLinkedAlert linked = mock(RegisterDeviceLinkedAlert.class);
     private final MeasurementRecordedConsumer consumer = new MeasurementRecordedConsumer(threshold,
-            limit, linked, mock(PlatformTransactionManager.class), JsonMapper.builder().build());
+            limit, anomaly, linked, mock(PlatformTransactionManager.class), JsonMapper.builder().build());
 
     @Test
     @DisplayName("a reading goes to the threshold, limit and linked-device checks")
@@ -43,6 +45,7 @@ class MeasurementRecordedConsumerTest {
         verify(linked).onMeasurement("DEV0000001", AT);
         verify(threshold).register(new RegisterThresholdAlertCommand("DEV0000001", "MEA0000001", AT, 285.5));
         verify(limit).evaluate("DEV0000001", AT);
+        verify(anomaly).evaluate(new RegisterThresholdAlertCommand("DEV0000001", "MEA0000001", AT, 285.5));
     }
 
     @Test
@@ -54,6 +57,16 @@ class MeasurementRecordedConsumerTest {
         consumer.on(message("measurement.recorded", READING));
 
         verify(threshold).register(new RegisterThresholdAlertCommand("DEV0000001", "MEA0000001", AT, 285.5));
+    }
+
+    @Test
+    @DisplayName("a failed anomaly check does not stop the limit check")
+    void anomalyFailureDoesNotStopTheLimit() {
+        willThrow(new IllegalStateException("measurement service down")).given(anomaly).evaluate(any());
+
+        consumer.on(message("measurement.recorded", READING));
+
+        verify(limit).evaluate("DEV0000001", AT);
     }
 
     @Test
