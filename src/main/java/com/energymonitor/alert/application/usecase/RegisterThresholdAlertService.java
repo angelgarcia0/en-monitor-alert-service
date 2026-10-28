@@ -104,7 +104,8 @@ public class RegisterThresholdAlertService implements RegisterThresholdAlert {
 
     private void resolvePendingThresholdAlerts(String homeId, String deviceId) {
         alertPort.listActiveByHome(homeId, AlertStatus.PENDING).stream()
-                .filter(a -> a.type() == AlertType.THRESHOLD && deviceId.equals(a.deviceId()))
+                .filter(a -> a.type() == AlertType.THRESHOLD && deviceId.equals(a.deviceId())
+                        && !RegisterAnomalyAlertService.MESSAGE_KEY.equals(a.messageKey()))
                 .forEach(alert -> {
                     alert.resolve();
                     alertPort.save(alert);
