@@ -5,6 +5,7 @@ import com.energymonitor.alert.adapter.in.messaging.MeasurementRecordedConsumer;
 import com.energymonitor.alert.adapter.out.device.RemoteDevices;
 import com.energymonitor.alert.application.port.in.RegisterConnectivityAlert;
 import com.energymonitor.alert.application.port.in.RegisterDeviceLinkedAlert;
+import com.energymonitor.alert.application.port.in.RegisterAnomalyAlert;
 import com.energymonitor.alert.application.port.in.RegisterLimitAlert;
 import com.energymonitor.alert.application.port.in.RegisterThresholdAlert;
 import com.energymonitor.alert.application.port.in.ResolveConnectivityAlerts;
@@ -113,10 +114,10 @@ public class AlertConsumersMessagingConfiguration {
     @Bean
     public MeasurementRecordedConsumer measurementRecordedConsumer(
             RegisterThresholdAlert registerThresholdAlert, RegisterLimitAlert registerLimitAlert,
-            RegisterDeviceLinkedAlert registerDeviceLinkedAlert,
+            RegisterAnomalyAlert registerAnomalyAlert, RegisterDeviceLinkedAlert registerDeviceLinkedAlert,
             PlatformTransactionManager transactions, ObjectMapper json) {
         return new MeasurementRecordedConsumer(registerThresholdAlert, registerLimitAlert,
-                registerDeviceLinkedAlert, transactions, json);
+                registerAnomalyAlert, registerDeviceLinkedAlert, transactions, json);
     }
 
     /** Forgetting goes to the cache of devices, {@link RemoteDevices}. */
